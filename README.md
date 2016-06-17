@@ -31,3 +31,144 @@ mCache.put("test_key3", "test value", 2 * ACache.TIME_DAY);//保存两天，如�
 
 ACache mCache = ACache.get(this);
 String value = mCache.getAsString("test_key1");
+
+
+具体详细用法如下：
+
+//获取缓存对象
+ACache mCache = ACache.get(this);
+
+mCache.remove(CACHE_KEY);//清除缓存
+put(String key, Obeject value, int saveTime);//设置缓存时间
+
+
+1.存取普通字符串
+
+mCache.put("testString", mEt_string_input.getText().toString());
+
+String testString = mCache.getAsString("testString");
+	
+	
+2.存取Json对象
+
+JSONObject jsonObject = new JSONObject();
+
+jsonObject.put("name", "Yoson");
+jsonObject.put("age", 18);
+		
+
+mCache.put("testJsonObject", jsonObject);
+
+JSONObject testJsonObject = mCache.getAsJSONObject("testJsonObject");
+
+3.存取Json数组
+JSONArray jsonArray = new JSONArray();
+
+JSONObject yosonJsonObject = new JSONObject();
+jsonObject.put("name", "Yoson");
+jsonObject.put("age", 18);
+
+JSONObject michaelJsonObject = new JSONObject();
+michaelJsonObject.put("name", "Michael");
+michaelJsonObject.put("age", 25);
+
+jsonArray.put(yosonJsonObject);
+jsonArray.put(michaelJsonObject);
+
+mCache.put("testJsonArray", jsonArray);//存储json数组
+JSONArray testJsonArray = mCache.getAsJSONArray("testJsonArray");//读取json数组
+
+
+4.存取bitmao对象
+
+Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.img_test);
+
+mCache.put("testBitmap", bitmap);
+Bitmap testBitmap = mCache.getAsBitmap("testBitmap");
+
+5.存取drawable对象
+
+Drawable drawable = getResources().getDrawable(R.drawable.img_test);
+
+mCache.put("testDrawable", drawable);
+Drawable testDrawable = mCache.getAsDrawable("testDrawable");
+
+6.存取一般序列化的java对象
+
+UserBean userBean = new UserBean();
+userBean.setAge("18");
+userBean.setName("HaoYoucai");
+
+mCache.put("testObject", userBean);
+UserBean testObject = (UserBean) mCache.getAsObject("testObject");
+
+
+
+7.存取媒体信息 需要异步处理
+
+//保存
+@Override
+    public void run() {
+        OutputStream ostream = null;
+        try {
+            ostream = mCache.put(CACHE_KEY);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        if (ostream == null){
+            Toast.makeText(this, "Open stream error!", Toast.LENGTH_SHORT)
+                    .show();
+            return;
+        }
+        try {
+            URL u = new URL(mUrl);
+            HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+            conn.connect();
+            InputStream stream = conn.getInputStream();
+
+            byte[] buff = new byte[1024];
+            int counter;
+
+            while ((counter = stream.read(buff)) > 0){
+                ostream.write(buff, 0, counter);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                // cache update
+                ostream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    text = (TextView) findViewById(R.id.text);
+                    text.setText("done...");
+                }
+            });
+        }
+    }
+
+
+//读取
+public void read(View v) {
+        InputStream stream = null;
+        try {
+            stream = mCache.get(CACHE_KEY);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        if (stream == null) {
+			Toast.makeText(this, "Bitmap cache is null ...", Toast.LENGTH_SHORT)
+					.show();
+            text.setText("file not found");
+			return;
+		}
+        try {
+            text.setText("file size: " + stream.available());
+        } catch (IOException e) {
+            text.setText("error " + e.getMessage());
+        }
+    }
